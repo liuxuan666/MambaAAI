@@ -1,7 +1,7 @@
 # MambaAAI
 Source code and data for "Bio-inspired Mamba for antibody-antigen interaction prediction"
 
-![Framework of MambaAAI](https://github.com/liuxuan666/MambaAAI/blob/main/p1.png)  
+![Framework of MambaAAI](https://github.com/liuxuan666/MambaAAI/blob/main/p1.pdf)  
 
 # Requirements
 * Python >= 3.10
