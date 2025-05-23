@@ -12,5 +12,7 @@ Source code and data for "Bio-inspired Mamba for antibody-antigen interaction pr
 * RDkit >= 2020.09
 
 # Usage
+* First, `pretrained.py` needs to be run to obtain the pretrained features of the antigen and antibody.
+* Next, the following scenarios can be tested:
 * python Main_5cv.py \<parameters\>  #---Binary classification task with 5-fold CV
 * python Main_indep.py \<parameters\> #---Independent testing with 9(traing):1(testing) split of the dataset
