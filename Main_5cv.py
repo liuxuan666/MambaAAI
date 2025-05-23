@@ -23,7 +23,7 @@ def train_epoch(mymodel, train_loader):
         ag = ag.to('cuda:0')
         labels = labels.to('cuda:0')  
         optimizer.zero_grad()
-        preds, _ = mymodel(ab, ag)
+        preds = mymodel(ab, ag)
         loss = criterion(preds, labels)
         loss.backward()
         optimizer.step()
@@ -46,20 +46,13 @@ def valid_epoch(mymodel, valid_loader, flag=True):
             ab = ab.to('cuda:0')
             ag = ag.to('cuda:0')
             labels = labels.to('cuda:0')  
-            preds, attention = mymodel(ab, ag)
-            if flag != True:
-                Return_attentions.append(attention.cpu().detach())
+            preds = mymodel(ab, ag)
             loss = criterion(preds, labels)
             loss_valid += loss.item()
             Y_true += labels.cpu().detach().numpy().tolist()
             Y_pred += preds.cpu().detach().numpy().tolist()
     AUC, AUPR, F1, ACC = Metrics(Y_true, Y_pred)
-    if flag != True:
-        print('valid-loss=', loss_valid/len(valid_loader.dataset))
-        Return_attentions = torch.cat(Return_attentions, dim=0)
-        return AUC, AUPR, F1, ACC, Return_attentions.numpy()
-    else:
-        return AUC, AUPR, F1, ACC, loss_valid
+    return AUC, AUPR, F1, ACC, loss_valid
     
 
 if __name__ == '__main__':    
@@ -123,7 +116,7 @@ if __name__ == '__main__':
         for epoch in range(args.epoch):
             print('epoch = %d'% (epoch+1))
             train_epoch(model, train_loader)
-            AUC, AUPR, F1, ACC, LOSS = valid_epoch(model, valid_loader, flag=True)
+            AUC, AUPR, F1, ACC, LOSS = valid_epoch(model, valid_loader)
             print('valid auc: ' + str(round(AUC, 4)) + '  valid aupr: ' + str(round(AUPR, 4)) +
                 '  valid f1: ' + str(round(F1, 4)) + '  valid acc: ' + str(round(ACC, 4)))  
             if(LOSS < Final_LOSS):
