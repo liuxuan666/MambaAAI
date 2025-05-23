@@ -47,10 +47,6 @@ def valid_epoch(mymodel, valid_loader):
             loss_valid += loss.item()
             Y_true += labels.cpu().detach().numpy().tolist()
             Y_pred += preds.cpu().detach().numpy().tolist()
-    Y_true = pd.DataFrame(Y_true, columns=['Value'])
-    Y_true.to_csv('Y_true.csv', index=False)
-    Y_pred = pd.DataFrame(Y_pred, columns=['Value'])
-    Y_pred.to_csv('Y_true.csv', index=False)
     AUC, AUPR, F1, ACC = Metrics(Y_true, Y_pred)
     return AUC, AUPR, F1, ACC, loss_valid
     
@@ -76,8 +72,6 @@ if __name__ == '__main__':
     print(len(Independent))
     task_save_folder = os.path.join('Results')
     make_dir(task_save_folder)
-    df = pd.DataFrame(Independent, columns=["Ab", "Ag", "label"])
-    df.to_csv('Independent_index.csv', index=False)
 
     #------------model training 
     Best_AUC = 0; Best_AUPR = 0
