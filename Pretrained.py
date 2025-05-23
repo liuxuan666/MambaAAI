@@ -9,7 +9,8 @@ import torch
 import os
 import numpy as np
 
-data_root = 'Data/variants'
+data_root = 'Data/HIV'
+#data_root = 'Data/CoVAbDab'
 ab_info = '%s/antibody.csv'%data_root
 ag_info = '%s/antigen.csv'%data_root
 
@@ -56,8 +57,8 @@ ag_info = list(zip(ag_info['ag_name'], ag_info['ag_seq']))
 ab_info = [(x, y) for x, y in ab_info if len(y)<=thres_ab]
 ag_info = [(x, y) for x, y in ag_info if len(y)<=thres_ag]
 
-alphabet_coding(ag_info, maxlen = thres_ag, save_dir='Data/Pretrained_variants/ag')
-alphabet_coding(ab_info, maxlen = thres_ab, save_dir='Data/Pretrained_variants/ab')
+alphabet_coding(ag_info, maxlen = thres_ag, save_dir='Data/Pretrained/ag')
+alphabet_coding(ab_info, maxlen = thres_ab, save_dir='Data/Pretrained/ab')
 # chunks = np.array_split(ag_info, 4)
 # for item in chunks:
 #     alphabet_coding(item, maxlen = thres_ag, save_dir='Data/Pretrained_Cov/ag')
