@@ -4,15 +4,12 @@ import random
 import torch
 import json
 import argparse
-import torch.nn as nn
 import os
-from sklearn.model_selection import KFold
 from Models import MambaCross
-from Toolkit import Metrics, set_seed_all, make_dir, AntibodyAntigenDataset, custom_collate_fn, computer_attentions
+from Toolkit import Metrics, set_seed_all, make_dir, AntibodyAntigenDataset, custom_collate_fn
 from Loader import *
 import math
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -24,7 +21,7 @@ def train_epoch(mymodel, train_loader):
         ag = ag.to(device)
         labels = labels.to(device)
         optimizer.zero_grad()
-        preds, _, _ = mymodel(ab, ag)
+        preds = mymodel(ab, ag)
         loss = criterion(preds, labels)
         loss.backward()
         optimizer.step()
@@ -36,34 +33,26 @@ def train_epoch(mymodel, train_loader):
     print('train auc: ' + str(round(AUC, 4)) + '  train aupr: ' + str(round(AUPR, 4)) +
           '  train f1: ' + str(round(F1, 4)) + '  train acc: ' + str(round(ACC, 4)))  
 
-def valid_epoch(mymodel, valid_loader, flag=True):
+def valid_epoch(mymodel, valid_loader):
     loss_valid = 0
     Y_true, Y_pred = [], []
-    Ab_W, Ag_W = [], []
     mymodel.eval()
     with torch.no_grad():
         for batch, (ab, ag, labels) in enumerate(valid_loader):
             ab = ab.to(device)
             ag = ag.to(device)
             labels = labels.to(device)  
-            preds, att_ab, att_ag  = mymodel(ab, ag)
-            if flag != True:
-                att_ab = computer_attentions(*att_ab)
-                att_ag = computer_attentions(*att_ag)
-                Ab_W.append(att_ab.cpu().detach())
-                Ag_W.append(att_ag.cpu().detach())
+            preds  = mymodel(ab, ag)
             loss = criterion(preds, labels)
             loss_valid += loss.item()
             Y_true += labels.cpu().detach().numpy().tolist()
             Y_pred += preds.cpu().detach().numpy().tolist()
+    Y_true = pd.DataFrame(Y_true, columns=['Value'])
+    Y_true.to_csv('Y_true.csv', index=False)
+    Y_pred = pd.DataFrame(Y_pred, columns=['Value'])
+    Y_pred.to_csv('Y_true.csv', index=False)
     AUC, AUPR, F1, ACC = Metrics(Y_true, Y_pred)
-    if flag != True:
-        print('valid-loss=', loss_valid/len(valid_loader.dataset))
-        Ab_W = torch.cat(Ab_W, dim=0)
-        Ag_W = torch.cat(Ag_W, dim=0)
-        return AUC, AUPR, F1, ACC, (Ab_W.numpy(), Ag_W.numpy())
-    else:
-        return AUC, AUPR, F1, ACC, loss_valid
+    return AUC, AUPR, F1, ACC, loss_valid
     
 
 if __name__ == '__main__':    
@@ -73,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_root', dest='filepath', nargs='?', type=str, default='Data/CoVAbDab', choices=['Data/HIV', 'Data/CoVAbDab'])
     parser.add_argument('--independent ratio', dest='ir', nargs='?', type=float, default=0.1)
     parser.add_argument('--fold num', dest='n', nargs='?', type=int, default=5)
-    parser.add_argument('--epoch num', dest='epoch', nargs='?', type=int, default=80)
+    parser.add_argument('--epoch num', dest='epoch', nargs='?', type=int, default=100)
     args = parser.parse_args()
 
     #-----------loading dataset
@@ -87,8 +76,8 @@ if __name__ == '__main__':
     print(len(Independent))
     task_save_folder = os.path.join('Results')
     make_dir(task_save_folder)
-    # df = pd.DataFrame(Independent, columns=["Ab", "Ag", "label"])
-    # df.to_csv('Independent_index.csv', index=False)
+    df = pd.DataFrame(Independent, columns=["Ab", "Ag", "label"])
+    df.to_csv('Independent_index.csv', index=False)
 
     #------------model training 
     Best_AUC = 0; Best_AUPR = 0
@@ -108,7 +97,7 @@ if __name__ == '__main__':
     train_set = AntibodyAntigenDataset(CV)
     indep_set = AntibodyAntigenDataset(Independent)
     train_loader = DataLoader(train_set, batch_size=param['batchsize'], num_workers=4, 
-                            shuffle=True, collate_fn=custom_collate_fn)
+                            shuffle=False, collate_fn=custom_collate_fn)
     indep_loader = DataLoader(indep_set, batch_size=param['batchsize'], num_workers=4, 
                             shuffle=False, collate_fn=custom_collate_fn)
     
@@ -117,7 +106,7 @@ if __name__ == '__main__':
     for epoch in range(args.epoch):
         print('epoch = %d'% (epoch+1))
         train_epoch(model, train_loader)
-        AUC, AUPR, F1, ACC, Loss = valid_epoch(model, indep_loader, flag=True)
+        AUC, AUPR, F1, ACC, Loss = valid_epoch(model, indep_loader)
         print('indepd auc: ' + str(round(AUC, 4)) + '  indep aupr: ' + str(round(AUPR, 4)) +
             '  indep f1: ' + str(round(F1, 4)) + '  indep acc: ' + str(round(ACC, 4)))  
         if(AUC > Final_AUC):
@@ -131,13 +120,3 @@ if __name__ == '__main__':
     file_name = os.path.join(task_save_folder, 'metrics_indep')
     with open(f'{file_name}.csv', 'w') as f:
         results.to_csv(f)     
-
-    # ##------------Independent/Unseen testing
-    # model.load_state_dict(torch.load(os.path.join(task_save_folder, 'model_indep.pt')))
-    # AUC, AUPR, F1, ACC, atten_maps = valid_epoch(model, indep_loader, flag=False)
-    # #atten_maps = softmax(atten_maps)
-    # print("\n================Independent testing====================")   
-    # print('indep auc: ' + str(round(AUC, 4)) + '  indep aupr: ' + str(round(AUPR, 4)) +
-    # '  indep f1: ' + str(round(F1, 4)) + '  indep acc: ' + str(round(ACC, 4))) 
-    # np.save(os.path.join(task_save_folder, 'attention_abs.npy'), atten_maps[0])
-    # np.save(os.path.join(task_save_folder, 'attention_ags.npy'), atten_maps[1])
