@@ -7,9 +7,8 @@ Source code and data for "Bio-inspired Mamba for antibody-antigen interaction pr
 * Python >= 3.10
 * PyTorch >= 2.2
 * PyTorch Geometry >= 1.8
-* hickle >= 3.4
-* DeepChem >= 2.4
-* RDkit >= 2020.09
+* fair-esm >= 1.1
+* 
 
 # Usage
 * First, `pretrained.py` needs to be run to obtain the pretrained features of the antigen and antibody.
