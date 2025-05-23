@@ -55,8 +55,8 @@ class MambaCross(nn.Module):
     def forward(self, x_Ab, x_Ag):
         #-----Mamba fusion
         contacts = torch.matmul(torch.matmul(x_Ab, self.W), x_Ag.transpose(1, 2))
-        x_Ab, delta_b, A_b, B_b, C_b = self.mamba_hor(contacts)
-        x_Ag, delta_g, A_g, B_g, C_g = self.mamba_ver(contacts.transpose(1, 2))     
+        x_Ab = self.mamba_hor(contacts)
+        x_Ag = self.mamba_ver(contacts.transpose(1, 2))     
         x_Ab = self.pool(x_Ab)
         x_Ag = self.pool(x_Ag)
         x = torch.cat([x_Ab.squeeze(-1), x_Ag.squeeze(-1)], dim=-1)
@@ -70,4 +70,4 @@ class MambaCross(nn.Module):
                 x = torch.dropout(x, self.r, train=False)
         x = torch.squeeze(self.output_layer(x))  # last layer
         
-        return torch.sigmoid(x), (delta_b, A_b, B_b, C_b), (delta_g, A_g, B_g, C_g)
+        return torch.sigmoid(x)
