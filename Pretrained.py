@@ -49,8 +49,10 @@ def alphabet_coding(data: list, maxlen: int, save_dir):
 # pretrained features
 len_ab = [len(l) for l in ab_info['heavy']]
 len_ag = [len(l) for l in ag_info['ag_seq']]
-thres_ab = int(np.percentile(len_ab, 100))
-thres_ag = int(np.percentile(len_ag, 100))
+
+thres_ab = int(np.percentile(len_ab, 100)); thres_ag = int(np.percentile(len_ag, 100))
+# dataset is HIV, thres_ab and thres_ag are set as follows:
+# thres_ab = int(np.percentile(len_ab, 90)); thres_ag = int(np.percentile(len_ag, 90))
 
 ab_info = list(zip(ab_info['ab_name'], ab_info['heavy']))
 ag_info = list(zip(ag_info['ag_name'], ag_info['ag_seq']))
