@@ -25,7 +25,8 @@ def alphabet_coding(data: list, maxlen: int, save_dir):
             ("protein2", "KALTARQQEVFDLIRDHISQTGMPPTRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE"),
             ("protein3 with mask","KALTARQQEVFDLIRD<mask>ISQTGMPPTRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE") ]
     '''
-    ESM_encoder, alphabet = esm.pretrained.load_model_and_alphabet_local("Data/esm2_t6_8M_UR50D.pt")
+    ESM_encoder, alphabet = esm.pretrained.esm2_t6_8M_UR50D()
+    # ESM_encoder, alphabet = esm.pretrained.load_model_and_alphabet_local("Data/esm2_t6_8M_UR50D.pt")
     batch_converter = alphabet.get_batch_converter()
     os.makedirs(save_dir, exist_ok=True)
     ESM_encoder.eval()
